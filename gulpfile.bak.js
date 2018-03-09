@@ -1,98 +1,86 @@
 /*===========GULP==============*/
 var gulp = require('gulp');
 var plumber = require('gulp-plumber');
-var browserSync = require('browser-sync');
-var sass = require('gulp-sass');
-var minifyCSS = require('gulp-minify-css');
-var useref = require('gulp-useref');
-var gulpIf = require('gulp-if');
-var concat = require('gulp-concat');
+
+
 /*===========Compile SCSS==============*/
+var sass = require('gulp-sass');
 
 gulp.task('sass', function() {
+	
 	gulp.src('assets/stylesheet/styles.scss')
 		.pipe(sass())
 		.pipe(gulp.dest('assets/stylesheet/'))
+		
+		/* gulp.src('html/sass/blocks/!*.scss')
+				 .pipe(sass())
+				 .pipe(gulp.dest('html/css'));
+		 
+		 gulp.src('html/sass/widgets/!*.scss')
+				 .pipe(sass())
+				 .pipe(gulp.dest('html/css'))*/
+		
 		.pipe(plumber())
 		.pipe(sass({errLogToConsole: true}))
 		.pipe(browserSync.reload({
 			stream: true
 		}))
 });
-/*===========Minify CSS==============*/
-// gulp.task('mincss', function(){
-// 	//var assets = useref.assets();
-//
-//
-// 	return gulp.src('./assets/stylesheet/styles.css')
-// 		//.pipe(assets)
-// 		.pipe(gulpIf('./assets/stylesheet/*.css', minifyCSS()))
-// 		// Uglifies only if it's a Javascript file
-// 		//.pipe(gulpIf('assets/javascripts/*.js', uglify()))
-// 		// .pipe(useref.restore())
-// 		.pipe(useref())
-// 		.pipe(gulp.dest('./dist'))
-// });
-// gulp.task('mincss', function() {
-// 	gulp.src('./assets/stylesheet/*.css')
-// 		.pipe(minifyCSS(opts))
-// 		.pipe(gulp.dest('./dist/'))
-// });
-gulp.task('mincss', function() {
-	gulp.src('./assets/stylesheet/styles.css')
-		.pipe(minifyCSS())
-		//.pipe(autoprefixer('last 2 version', 'safari 5', 'ie 8', 'ie 9'))
-		.pipe(concat('style.min.css'))
-		.pipe(gulp.dest('dist'));
-});
+
+
 /*===========Watch==============*/
-// gulp.task('watch', ['browserSync', 'sass'], function (){
-// 	gulp.watch('assets/stylesheet/styles.scss', ['sass']);
-// 	gulp.watch('dist/*.html', browserSync.reload);
-// 	gulp.watch('assets/javascript/*.js', browserSync.reload);
-// });
+
+
+gulp.task('watch', ['browserSync', 'sass'], function (){
+	gulp.watch('assets/stylesheet/styles.scss', ['sass']);
+	gulp.watch('dist/*.html', browserSync.reload);
+	gulp.watch('assets/javascript/*.js', browserSync.reload);
+	
+	// others
+});
+
 
 /*===========ON-Line synchronization from browsers==============*/
 
-// var browserSync = require('browser-sync');
-//
-// gulp.task('browserSync', function() {
-// 	browserSync({
-// 		server: {
-// 			baseDir: '/dist/'
-// 		}
-// 	})
-// });
+var browserSync = require('browser-sync');
+
+gulp.task('browserSync', function() {
+	browserSync({
+		server: {
+			baseDir: '/dist/'
+		}
+	})
+});
 
 
 /*===========Join files==============*/
 
 
-// var useref = require('gulp-useref');
-//
-// gulp.task('useref', function(){
-// 	var assets = useref.assets();
-//
-// 	return gulp.src('*.html')
-// 		.pipe(assets)
-// 		.pipe(assets.restore())
-// 		.pipe(useref())
-// 		.pipe(gulp.dest('dist'))
-// });
+var useref = require('gulp-useref');
+
+gulp.task('useref', function(){
+	var assets = useref.assets();
+	
+	return gulp.src('*.html')
+		.pipe(assets)
+		.pipe(assets.restore())
+		.pipe(useref())
+		.pipe(gulp.dest('dist'))
+});
 
 
-// var uglify = require('gulp-uglify');
-//
-// gulp.task('useref', function(){
-// 	var assets = useref.assets();
-//
-// 	return gulp.src('*.html')
-// 		.pipe(assets)
-// 		.pipe(uglify())
-// 		.pipe(assets.restore())
-// 		.pipe(useref())
-// 		.pipe(gulp.dest('dist'))
-// });
+var uglify = require('gulp-uglify');
+
+gulp.task('useref', function(){
+	var assets = useref.assets();
+	
+	return gulp.src('*.html')
+		.pipe(assets)
+		.pipe(uglify())
+		.pipe(assets.restore())
+		.pipe(useref())
+		.pipe(gulp.dest('dist'))
+});
 
 
 
@@ -188,15 +176,15 @@ gulp.task('mincss', function() {
 var runSequence = require('run-sequence');
 
 gulp.task('default', function(callback) {
-	//runSequence(['sass', 'browserSync', 'watch'],
-	runSequence(['sass', 'mincss'],
+	runSequence(['sass', 'browserSync', 'watch'],
 		callback
 	)
 });
 
 gulp.task('build', function(callback) {
 	runSequence(
-		['sass', 'mincss'],
+		'clean:dist',
+		['sass', 'useref', 'images', 'fonts'],
 		callback
 	)
 });
