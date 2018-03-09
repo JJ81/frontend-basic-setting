@@ -1,0 +1,21 @@
+{
+  "name": "frontend-basic-setting",
+  "homepage": "https://github.com/JJ81/frontend-basic-setting",
+  "authors": [
+    "yijaejun <yijaejun81@gmail.com>"
+  ],
+  "description": "",
+  "main": "",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "public/components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "^3.3.1"
+  }
+}
