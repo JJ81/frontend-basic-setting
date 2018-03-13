@@ -4,11 +4,21 @@ var plumber = require('gulp-plumber');
 var browserSync = require('browser-sync');
 var sass = require('gulp-sass');
 var minifyCSS = require('gulp-minify-css');
+var minify = require('gulp-minify');
 var useref = require('gulp-useref');
 var gulpIf = require('gulp-if');
 var concat = require('gulp-concat');
+var uglify = require('gulp-uglify');
+var pump = require('pump');
+var rename = require('gulp-rename');
+var del = require('del');
+var cache = require('gulp-cache');
+var babel = require('gulp-babel');
+var env = require('babel-preset-env');
+var es2015 = require('babel-preset-es2015');
+var es2016 = require('babel-preset-es2016');
+var imagemin = require('gulp-imagemin');
 /*===========Compile SCSS==============*/
-
 gulp.task('sass', function() {
 	gulp.src('assets/stylesheet/styles.scss')
 		.pipe(sass())
@@ -20,24 +30,6 @@ gulp.task('sass', function() {
 		}))
 });
 /*===========Minify CSS==============*/
-// gulp.task('mincss', function(){
-// 	//var assets = useref.assets();
-//
-//
-// 	return gulp.src('./assets/stylesheet/styles.css')
-// 		//.pipe(assets)
-// 		.pipe(gulpIf('./assets/stylesheet/*.css', minifyCSS()))
-// 		// Uglifies only if it's a Javascript file
-// 		//.pipe(gulpIf('assets/javascripts/*.js', uglify()))
-// 		// .pipe(useref.restore())
-// 		.pipe(useref())
-// 		.pipe(gulp.dest('./dist'))
-// });
-// gulp.task('mincss', function() {
-// 	gulp.src('./assets/stylesheet/*.css')
-// 		.pipe(minifyCSS(opts))
-// 		.pipe(gulp.dest('./dist/'))
-// });
 gulp.task('mincss', function() {
 	gulp.src('./assets/stylesheet/styles.css')
 		.pipe(minifyCSS())
@@ -45,6 +37,30 @@ gulp.task('mincss', function() {
 		.pipe(concat('style.min.css'))
 		.pipe(gulp.dest('dist'));
 });
+
+
+// js uglify
+gulp.task('js-compile-uglify', function(){
+	gulp.src(['./assets/javascript/index.js'])
+		.pipe(babel({
+			presets: ['es2015', 'es2016'] // env에 대해서 알아볼 것. require 등이 제대로 컴파일이 안됨
+		}))
+		.pipe(uglify())
+		.pipe(concat('bundle.min.js'))
+		.pipe(gulp.dest('dist'))
+});
+
+// auto delete in dist
+gulp.task('clean:dist', function(){
+	return del('dist/*', {force:true});
+});
+
+// TODO 왜 이게 필요한지 확인한 후에 사용하자.
+gulp.task('clean', function(callback) {
+	del('dist');
+	return cache.clearAll(callback);
+});
+
 /*===========Watch==============*/
 // gulp.task('watch', ['browserSync', 'sass'], function (){
 // 	gulp.watch('assets/stylesheet/styles.scss', ['sass']);
@@ -65,66 +81,18 @@ gulp.task('mincss', function() {
 // });
 
 
-/*===========Join files==============*/
-
-
-// var useref = require('gulp-useref');
-//
-// gulp.task('useref', function(){
-// 	var assets = useref.assets();
-//
-// 	return gulp.src('*.html')
-// 		.pipe(assets)
-// 		.pipe(assets.restore())
-// 		.pipe(useref())
-// 		.pipe(gulp.dest('dist'))
-// });
-
-
-// var uglify = require('gulp-uglify');
-//
-// gulp.task('useref', function(){
-// 	var assets = useref.assets();
-//
-// 	return gulp.src('*.html')
-// 		.pipe(assets)
-// 		.pipe(uglify())
-// 		.pipe(assets.restore())
-// 		.pipe(useref())
-// 		.pipe(gulp.dest('dist'))
-// });
-
-
 
 /*===========Join files for CSS==============*/
 
 
-// var gulpIf = require('gulp-if');
-//
+
+
 // gulp.task('useref', function(){
 // 	var assets = useref.assets();
 //
 // 	return gulp.src('*.html')
 // 		.pipe(assets)
 // 		.pipe(gulpIf('assets/javascript/*.js', uglify()))
-// 		.pipe(assets.restore())
-// 		.pipe(useref())
-// 		.pipe(gulp.dest('dist'))
-// });
-
-
-/*===========Minify CSS==============*/
-
-// var minifyCSS = require('gulp-minify-css');
-//
-// gulp.task('useref', function(){
-// 	var assets = useref.assets();
-//
-// 	return gulp.src('*.html')
-// 		.pipe(assets)
-// 		.pipe(gulpIf('./assets/stylesheet/*.css', minifyCSS()))
-// 		// Uglifies only if it's a Javascript file
-// 		.pipe(gulpIf('assets/javascripts/*.js', uglify()))
 // 		.pipe(assets.restore())
 // 		.pipe(useref())
 // 		.pipe(gulp.dest('dist'))
@@ -161,26 +129,12 @@ gulp.task('mincss', function() {
 
 
 /*=============Copy Fonts==============*/
-
+// 각종 폰트 및 fontawesome 관련 연결할 때 사용할 것.
 // gulp.task('fonts', function() {
 // 	return gulp.src('html/fonts/**/*')
 // 		.pipe(gulp.dest('dist/fonts'))
 // });
 
-
-/*=============Auto-deleting temporary files==============*/
-
-// var del = require('del');
-//
-// gulp.task('clean:dist', function(callback){
-// 	del(['dist/**/*', '!dist/images', '!dist/images/**/*'], callback)
-// });
-//
-//
-// gulp.task('clean', function(callback) {
-// 	del('dist');
-// 	return cache.clearAll(callback);
-// });
 
 
 /*=============Join tasks==============*/
@@ -189,14 +143,14 @@ var runSequence = require('run-sequence');
 
 gulp.task('default', function(callback) {
 	//runSequence(['sass', 'browserSync', 'watch'],
-	runSequence(['sass', 'mincss'],
+	runSequence(['sass', 'mincss', 'js-compile-uglify'],
 		callback
 	)
 });
 
 gulp.task('build', function(callback) {
 	runSequence(
-		['sass', 'mincss'],
+		['clean:dist', 'sass', 'mincss', 'js-compile-uglify'],
 		callback
 	)
 });
